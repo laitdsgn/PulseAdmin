@@ -37,6 +37,7 @@ Login i hasło są wypisywane tylko raz.
 - Role (`src/lib/roles.ts`) odpowiadają strażnikom backendu: `admin` – wszystko; `moderator` – bez użytkowników i dziennika; `city` – tylko statystyki, skupiska i eksport CSV swoich miast.
 - Filtry i otwarty element (`?id=`) są w URL, więc widoki da się linkować.
 - Mapa (`/map`, moderator i admin) pobiera zgłoszenia i miejsca dla widocznego obszaru z publicznych `GET /v1/reports?bbox=` i `GET /v1/places?bbox=` (do 1000 punktów na warstwę; powyżej prosi o przybliżenie). Publiczne endpointy nie zwracają ukrytych zgłoszeń – te są tylko w zakładce Zgłoszenia.
+- Zdjęcia zgłoszeń (`src/components/ReportPhoto.tsx`): widoczne ładowane z publicznego `/v1/photos/:id` (cache), zdjęcia ukrytych zgłoszeń – które publiczny endpoint odrzuca – z `GET /v1/admin/photos/:id` z tokenem, jako blob. Są w tabeli (miniatury, filtr `hasPhoto`), w szczegółach, w kolejce moderacji i na pulpicie („Najnowsze zdjęcia”).
 - Teksty: `src/i18n/pl.ts` i `src/i18n/en.ts` (słownik `en` jest typowany kluczami `pl`; brak tłumaczenia = błąd `tsc`). Lokalizowane pola z API (tytuły zgłoszeń) przychodzą w języku z nagłówka `Accept-Language`.
 
 ### Limity za proxy

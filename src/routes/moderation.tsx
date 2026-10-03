@@ -5,6 +5,7 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 import { CategoryBadge } from "@/components/badges";
 import { useUrlFilters } from "@/components/Filters";
+import { ReportPhoto } from "@/components/ReportPhoto";
 import { EmptyState, ErrorState, LoadingRows, PageHeader } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { formatDateTime, shortId } from "@/lib/format";
 import { useInfiniteList, useInvalidate } from "@/lib/queries";
 import type { FlagAction, FlagGroup, Page } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useAdminReport } from "./ReportSheet";
 
 const PATH = "/v1/moderation/flags";
 const keyOf = (g: FlagGroup) => `${g.targetType}:${g.targetId}`;
@@ -258,6 +260,7 @@ function FlagDetail({
             </div>
             {p.description && <p className="text-sm whitespace-pre-wrap">{p.description}</p>}
             {p.address && <p className="text-sm text-muted-foreground">{p.address}</p>}
+            {group.targetType === "report" && <FlaggedReportPhoto id={group.targetId} />}
           </div>
         )}
 
@@ -307,5 +310,20 @@ function FlagDetail({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/** The flag preview has no photo; load it from the report (hidden ones included). */
+function FlaggedReportPhoto({ id }: { id: string }) {
+  const { t } = useI18n();
+  const { data: report } = useAdminReport(id);
+  if (!report?.photoUrl) return null;
+  return (
+    <ReportPhoto
+      photoUrl={report.photoUrl}
+      hidden={report.hidden}
+      alt={`${t("reports.photo")}: ${report.title}`}
+      className="max-h-80 w-full rounded-md border"
+    />
   );
 }

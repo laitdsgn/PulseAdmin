@@ -11,7 +11,9 @@ import { Progress } from "@/components/ui/progress";
 import { useI18n } from "@/i18n";
 import { apiFetch } from "@/lib/api";
 import { formatDate, formatNumber } from "@/lib/format";
-import type { Dashboard } from "@/lib/types";
+import type { AdminReport, Dashboard, Page } from "@/lib/types";
+import { ReportPhoto } from "@/components/ReportPhoto";
+import { HiddenBadge } from "@/components/badges";
 
 export function DashboardPage() {
   const { t, lang } = useI18n();
@@ -128,6 +130,8 @@ export function DashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          <LatestPhotos city={values.city} />
         </div>
       )}
     </>
@@ -156,5 +160,60 @@ export function CategoryBars({ rows }: { rows: { label: string; count: number; e
         </li>
       ))}
     </ul>
+  );
+}
+
+const PHOTO_COUNT = 8;
+
+/** The newest reports that came with a photo; a click opens the report. */
+function LatestPhotos({ city }: { city: string }) {
+  const { t, lang } = useI18n();
+  const photos = useQuery({
+    queryKey: ["/v1/admin/reports", { hasPhoto: "true", city, limit: PHOTO_COUNT }],
+    queryFn: () =>
+      apiFetch<Page<AdminReport>>("/v1/admin/reports", {
+        query: { hasPhoto: true, city, limit: PHOTO_COUNT },
+      }).then((r) => r.data),
+  });
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">{t("dashboard.latestPhotos")}</CardTitle>
+        <Link
+          to={`/reports?hasPhoto=true${city ? `&city=${city}` : ""}`}
+          className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+        >
+          {t("dashboard.allPhotos")} →
+        </Link>
+      </CardHeader>
+      <CardContent>
+        {photos.isLoading ? (
+          <LoadingRows rows={2} />
+        ) : photos.error ? (
+          <ErrorState error={photos.error} onRetry={() => void photos.refetch()} />
+        ) : !photos.data?.length ? (
+          <p className="text-sm text-muted-foreground">{t("dashboard.noPhotos")}</p>
+        ) : (
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
+            {photos.data.map((r) => (
+              <li key={r.id} className="space-y-1">
+                <ReportPhoto
+                  photoUrl={r.photoUrl}
+                  hidden={r.hidden}
+                  alt={r.title}
+                  className="aspect-square w-full rounded-md"
+                />
+                <Link to={`/reports?id=${r.id}`} className="block text-xs underline-offset-4 hover:underline">
+                  <span className="line-clamp-1 font-medium">{r.title}</span>
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    {formatDate(r.createdAt, lang)} <HiddenBadge hidden={r.hidden} />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

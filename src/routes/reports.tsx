@@ -2,6 +2,7 @@ import { CategoryBadge, HiddenBadge, SeverityBadge, StatusBadge } from "@/compon
 import { AuthorLink } from "@/components/CommentList";
 import { DataTable, listProps, type Column } from "@/components/DataTable";
 import { CityPicker, FilterBar, FilterSelect, SearchInput, useCityName, useUrlFilters } from "@/components/Filters";
+import { ReportPhoto } from "@/components/ReportPhoto";
 import { PageHeader } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { useInfiniteList } from "@/lib/queries";
 import type { AdminReport } from "@/lib/types";
 import { ReportSheet } from "./ReportSheet";
 
-const FILTERS = ["q", "status", "category", "city", "authorId", "visibility", "id"] as const;
+const FILTERS = ["q", "status", "category", "city", "authorId", "visibility", "hasPhoto", "id"] as const;
 
 export function ReportsPage() {
   const { t, lang } = useI18n();
@@ -26,6 +27,16 @@ export function ReportsPage() {
   );
 
   const columns: Column<AdminReport>[] = [
+    {
+      header: <span className="sr-only">{t("reports.photo")}</span>,
+      cell: (r) =>
+        r.photoUrl ? (
+          <ReportPhoto photoUrl={r.photoUrl} hidden={r.hidden} alt={r.title} className="size-10 rounded" />
+        ) : (
+          <div className="size-10 rounded bg-muted/50" aria-hidden />
+        ),
+      className: "w-12 pr-0",
+    },
     {
       header: t("reports.report"),
       cell: (r) => (
@@ -98,6 +109,17 @@ export function ReportsPage() {
           options={VISIBILITIES.filter((v) => v !== "any").map((v) => ({ value: v, label: t(`visibility.${v}`) }))}
           allLabel={t("visibility.any")}
           className="w-40"
+        />
+        <FilterSelect
+          label={t("reports.photo")}
+          value={values.hasPhoto}
+          onChange={(v) => set("hasPhoto", v)}
+          options={[
+            { value: "true", label: t("reports.withPhoto") },
+            { value: "false", label: t("reports.withoutPhoto") },
+          ]}
+          allLabel={t("common.any")}
+          className="w-44"
         />
         <Input
           inputMode="numeric"

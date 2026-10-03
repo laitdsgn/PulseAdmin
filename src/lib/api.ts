@@ -82,6 +82,9 @@ export const apiFetch = async <T = void>(path: string, opts: Options = {}): Prom
   return (await res.json()) as T;
 };
 
+/** Fetches binary content that needs the Bearer token (e.g. a staff-only photo). */
+export const apiBlob = async (path: string, signal?: AbortSignal) => (await send(path, { signal })).blob();
+
 /** Downloads a file that needs the Bearer token (a plain link cannot send it). */
 export const apiDownload = async (path: string, query: Query, fallbackName: string) => {
   const res = await send(path, { query });
@@ -101,3 +104,6 @@ export const photoSrc = (url: string | null) => {
   const i = url.indexOf("/v1/photos/");
   return i >= 0 ? url.slice(i) : url;
 };
+
+/** The photo id at the end of a report's photoUrl. */
+export const photoIdOf = (url: string | null) => (url ? (url.split("/").pop() ?? null) : null);

@@ -10,6 +10,7 @@ import { AuthorLink, CommentList } from "@/components/CommentList";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useCityName } from "@/components/Filters";
 import { MapPreview } from "@/components/map";
+import { ReportPhoto } from "@/components/ReportPhoto";
 import { ErrorState, LoadingRows } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useI18n } from "@/i18n";
-import { apiFetch, ApiError, photoSrc } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import { CATEGORIES, CATEGORIES_BY_KIND, PROFILES, SEVERITIES } from "@/lib/enums";
 import { applyFieldErrors, toastError } from "@/lib/errors";
 import { formatDateTime, formatNumber, formatPercent, osmLink } from "@/lib/format";
@@ -27,7 +28,7 @@ import { useInfiniteList, useInvalidate } from "@/lib/queries";
 import type { AdminComment, AdminReport, Page } from "@/lib/types";
 
 /** Loads one report (hidden ones too) through the admin list's exact-id search. */
-const useAdminReport = (id: string | null) =>
+export const useAdminReport = (id: string | null) =>
   useQuery({
     queryKey: ["/v1/admin/reports", { id }],
     enabled: !!id,
@@ -80,7 +81,6 @@ function ReportDetails({ report: r }: { report: AdminReport }) {
     onError: (err) => toastError(err, t),
   });
 
-  const photo = photoSrc(r.photoUrl);
   const rows: [string, React.ReactNode][] = [
     [t("reports.severity"), <SeverityBadge severity={r.severity} />],
     [t("common.city"), cityName(r.cityId)],
@@ -143,16 +143,12 @@ function ReportDetails({ report: r }: { report: AdminReport }) {
           </Button>
         </div>
 
-        {photo && (
-          <a href={photo} target="_blank" rel="noreferrer" className="block">
-            <img
-              src={photo}
-              alt={t("reports.photo")}
-              loading="lazy"
-              className="max-h-72 w-full rounded-md border object-cover"
-            />
-          </a>
-        )}
+        <ReportPhoto
+          photoUrl={r.photoUrl}
+          hidden={r.hidden}
+          alt={`${t("reports.photo")}: ${r.title}`}
+          className="max-h-72 w-full rounded-md border"
+        />
 
         {r.description && <p className="text-sm whitespace-pre-wrap">{r.description}</p>}
 
