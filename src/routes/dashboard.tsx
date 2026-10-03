@@ -1,0 +1,160 @@
+import { useQuery } from "@tanstack/react-query";
+import { Bot, ClipboardList, Flag, MessageSquare, Users } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Link } from "react-router";
+import { CityPicker, useUrlFilters } from "@/components/Filters";
+import { ErrorState, LoadingRows, PageHeader } from "@/components/states";
+import { StatTile } from "@/components/StatTile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { Progress } from "@/components/ui/progress";
+import { useI18n } from "@/i18n";
+import { apiFetch } from "@/lib/api";
+import { formatDate, formatNumber } from "@/lib/format";
+import type { Dashboard } from "@/lib/types";
+
+export function DashboardPage() {
+  const { t, lang } = useI18n();
+  const { values, set } = useUrlFilters(["city"] as const);
+  const query = useQuery({
+    queryKey: ["/v1/admin/dashboard", values.city],
+    queryFn: () =>
+      apiFetch<{ data: Dashboard }>("/v1/admin/dashboard", { query: { city: values.city } }).then((r) => r.data),
+  });
+
+  const chartConfig = { count: { label: t("dashboard.count"), color: "var(--chart-1)" } } satisfies ChartConfig;
+  const d = query.data;
+  const n = (v: number) => formatNumber(v, lang);
+
+  return (
+    <>
+      <PageHeader
+        title={t("dashboard.title")}
+        actions={<CityPicker value={values.city} onChange={(v) => set("city", v)} />}
+      />
+      {query.isLoading ? (
+        <LoadingRows />
+      ) : query.error || !d ? (
+        <ErrorState error={query.error} onRetry={() => void query.refetch()} />
+      ) : (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <StatTile
+              label={t("dashboard.reportsActive")}
+              icon={ClipboardList}
+              value={n(d.reports.active)}
+              sub={t("dashboard.reportsSub", {
+                total: n(d.reports.total),
+                resolved: n(d.reports.resolved),
+                hidden: n(d.reports.hidden),
+                new: n(d.reports.newLast7Days),
+              })}
+            />
+            <StatTile
+              label={t("dashboard.openFlags")}
+              icon={Flag}
+              value={n(d.openFlags)}
+              footer={
+                <Link to="/moderation" className="text-xs font-medium text-primary underline-offset-4 hover:underline">
+                  {t("dashboard.openFlagsLink")} →
+                </Link>
+              }
+            />
+            <StatTile
+              label={t("dashboard.users")}
+              icon={Users}
+              value={n(d.users.total)}
+              sub={t("dashboard.usersSub", {
+                new: n(d.users.newLast7Days),
+                staff: n(d.users.staff),
+                disabled: n(d.users.disabled),
+              })}
+            />
+            <StatTile
+              label={t("dashboard.comments")}
+              icon={MessageSquare}
+              value={n(d.comments.total)}
+              sub={t("dashboard.commentsSub", { hidden: n(d.comments.hidden) })}
+            />
+            <StatTile
+              label={t("dashboard.llm")}
+              icon={Bot}
+              value={`${n(d.llm.callsToday)} / ${n(d.llm.dailyLimit)}`}
+              sub={t("dashboard.llmSub", { limit: n(d.llm.dailyLimit) })}
+              footer={
+                <Progress
+                  value={d.llm.dailyLimit ? Math.min(100, (d.llm.callsToday / d.llm.dailyLimit) * 100) : 0}
+                  className="mt-2"
+                  aria-label={t("dashboard.llm")}
+                />
+              }
+            />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-base">{t("dashboard.perDay")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="aspect-auto h-64 w-full">
+                  <BarChart data={d.reportsPerDay} margin={{ left: -16 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      minTickGap={24}
+                      tickFormatter={(v: string) => formatDate(v, lang)}
+                    />
+                    <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={40} />
+                    <ChartTooltip
+                      content={<ChartTooltipContent labelFormatter={(v) => formatDate(String(v), lang)} />}
+                    />
+                    <Bar dataKey="count" fill="var(--color-count)" radius={3} />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t("dashboard.topCategories")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CategoryBars
+                  rows={d.topCategories.map((c) => ({ label: t(`category.${c.category}`), count: c.count }))}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Horizontal bars as plain HTML: readable labels of any length, no chart library needed. */
+export function CategoryBars({ rows }: { rows: { label: string; count: number; extra?: string }[] }) {
+  const { lang } = useI18n();
+  const max = Math.max(1, ...rows.map((r) => r.count));
+  if (rows.length === 0) return <p className="text-sm text-muted-foreground">—</p>;
+  return (
+    <ul className="space-y-2">
+      {rows.map((r) => (
+        <li key={r.label} className="space-y-1">
+          <div className="flex justify-between gap-2 text-sm">
+            <span className="truncate">{r.label}</span>
+            <span className="tabular-nums text-muted-foreground">
+              {formatNumber(r.count, lang)}
+              {r.extra && ` · ${r.extra}`}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-muted">
+            <div className="h-2 rounded-full bg-chart-1" style={{ width: `${(r.count / max) * 100}%` }} />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
