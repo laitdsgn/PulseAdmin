@@ -4,6 +4,7 @@ import {
   Flag,
   LayoutDashboard,
   LogOut,
+  Map as MapIcon,
   MapPin,
   Menu,
   MessageSquare,
@@ -16,7 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useMatch } from "react-router";
 import { RoleBadge } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ import { cn } from "@/lib/utils";
 
 const NAV: { area: Area; to: string; label: MessageKey; icon: LucideIcon }[] = [
   { area: "dashboard", to: "/dashboard", label: "nav.dashboard", icon: LayoutDashboard },
+  { area: "map", to: "/map", label: "nav.map", icon: MapIcon },
   { area: "moderation", to: "/moderation", label: "nav.moderation", icon: Flag },
   { area: "reports", to: "/reports", label: "nav.reports", icon: ClipboardList },
   { area: "comments", to: "/comments", label: "nav.comments", icon: MessageSquare },
@@ -142,6 +144,8 @@ function UserMenu() {
 export function AppLayout() {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
+  // The map uses the full width; other pages keep a readable max width.
+  const fullWidth = useMatch("/map");
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
@@ -170,7 +174,7 @@ export function AppLayout() {
           <div className="flex-1" />
           <UserMenu />
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 p-4 md:p-6">
+        <main className={cn("w-full flex-1", fullWidth ? "" : "mx-auto max-w-7xl p-4 md:p-6")}>
           <Outlet />
         </main>
       </div>

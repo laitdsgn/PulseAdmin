@@ -1,6 +1,6 @@
 # PulseAdmin
 
-Panel personelu Pulse („Kraków bez barier”): moderacja zgłoszeń i komentarzy, zarządzanie zgłoszeniami i miejscami, użytkownicy i role, dziennik zmian oraz statystyki miasta. Korzysta z API [`PulseBackend`](../PulseBackend) (`/v1/admin/*`, `/v1/moderation/*`, `/v1/city/*`).
+Panel personelu Pulse („Kraków bez barier”): mapa zgłoszeń, moderacja zgłoszeń i komentarzy, zarządzanie zgłoszeniami i miejscami, użytkownicy i role, dziennik zmian oraz statystyki miasta. Korzysta z API [`PulseBackend`](../PulseBackend) (`/v1/admin/*`, `/v1/moderation/*`, `/v1/city/*`).
 
 Stos: Bun (`Bun.serve` + HTML imports), React 19, Tailwind 4, shadcn/ui, react-router, TanStack Query, react-hook-form + zod, recharts, Leaflet. Interfejs po polsku i angielsku.
 
@@ -36,6 +36,7 @@ Login i hasło są wypisywane tylko raz.
 - Sesja (`src/lib/tokens.ts`): refresh token i access token (z datą ważności z JWT) leżą w `localStorage`, wspólnie dla wszystkich kart. Token odświeża się dopiero tuż przed wygaśnięciem, jedno odświeżenie naraz w obrębie karty i między kartami (Web Locks). Backend rotuje refresh tokeny, a ponowne użycie starego unieważnia wszystkie sesje (`refresh_reuse`), więc to ważne.
 - Role (`src/lib/roles.ts`) odpowiadają strażnikom backendu: `admin` – wszystko; `moderator` – bez użytkowników i dziennika; `city` – tylko statystyki, skupiska i eksport CSV swoich miast.
 - Filtry i otwarty element (`?id=`) są w URL, więc widoki da się linkować.
+- Mapa (`/map`, moderator i admin) pobiera zgłoszenia i miejsca dla widocznego obszaru z publicznych `GET /v1/reports?bbox=` i `GET /v1/places?bbox=` (do 1000 punktów na warstwę; powyżej prosi o przybliżenie). Publiczne endpointy nie zwracają ukrytych zgłoszeń – te są tylko w zakładce Zgłoszenia.
 - Teksty: `src/i18n/pl.ts` i `src/i18n/en.ts` (słownik `en` jest typowany kluczami `pl`; brak tłumaczenia = błąd `tsc`). Lokalizowane pola z API (tytuły zgłoszeń) przychodzą w języku z nagłówka `Accept-Language`.
 
 ### Limity za proxy

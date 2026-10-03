@@ -40,6 +40,7 @@ export const pl = {
   "common.chars": "{count}/{max} znaków",
 
   "nav.dashboard": "Pulpit",
+  "nav.map": "Mapa",
   "nav.city": "Statystyki miasta",
   "nav.moderation": "Moderacja",
   "nav.reports": "Zgłoszenia",
@@ -124,6 +125,15 @@ export const pl = {
   "city.export": "Eksport CSV",
   "city.exporting": "Przygotowywanie pliku…",
   "city.months": "Miesięcy",
+
+  "map.title": "Mapa zgłoszeń",
+  "map.kind": "Rodzaj",
+  "map.showPlaces": "Miejsca",
+  "map.count": "zgłoszenia: {reports} · miejsca: {places}",
+  "map.truncated": "Pokazano pierwsze {max} punktów – przybliż mapę, aby zobaczyć wszystkie.",
+  "map.legend": "Zgłoszenia",
+  "map.placesLegend": "Miejsca (dostępność dla wózka)",
+  "map.hiddenNote": "Ukryte zgłoszenia nie są widoczne na mapie – znajdziesz je w zakładce Zgłoszenia.",
 
   "moderation.title": "Kolejka moderacji",
   "moderation.open": "Otwarte",

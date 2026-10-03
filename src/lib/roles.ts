@@ -4,6 +4,7 @@ import type { Role } from "./enums";
 
 export const AREAS = [
   "dashboard",
+  "map",
   "city",
   "moderation",
   "reports",
@@ -17,7 +18,7 @@ export type Area = (typeof AREAS)[number];
 
 const ACCESS: Record<Role, readonly Area[]> = {
   admin: AREAS,
-  moderator: ["dashboard", "city", "moderation", "reports", "comments", "places", "account"],
+  moderator: ["dashboard", "map", "city", "moderation", "reports", "comments", "places", "account"],
   city: ["city", "account"],
   user: [],
 };

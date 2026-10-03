@@ -17,6 +17,7 @@ import { CommentsPage } from "@/routes/comments";
 import { DashboardPage } from "@/routes/dashboard";
 import { NotFoundPage } from "@/routes/errors";
 import { LoginPage } from "@/routes/login";
+import { MapPage } from "@/routes/map";
 import { ModerationPage } from "@/routes/moderation";
 import { PlacesPage } from "@/routes/places";
 import { ReportsPage } from "@/routes/reports";
@@ -44,6 +45,14 @@ const router = createBrowserRouter([
         element: (
           <RoleGuard area="dashboard">
             <DashboardPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "map",
+        element: (
+          <RoleGuard area="map">
+            <MapPage />
           </RoleGuard>
         ),
       },

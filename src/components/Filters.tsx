@@ -10,17 +10,21 @@ import { useCities } from "@/lib/queries";
 export const useUrlFilters = <K extends string>(keys: readonly K[]) => {
   const [params, setParams] = useSearchParams();
   const values = Object.fromEntries(keys.map((k) => [k, params.get(k) ?? ""])) as Record<K, string>;
-  const set = (key: string, value: string | null) =>
+  /** Changes several params in one navigation (separate `set` calls would overwrite each other). */
+  const setMany = (changes: Record<string, string | null>) =>
     setParams(
       (prev) => {
         const next = new URLSearchParams(prev);
-        if (value) next.set(key, value);
-        else next.delete(key);
+        for (const [key, value] of Object.entries(changes)) {
+          if (value) next.set(key, value);
+          else next.delete(key);
+        }
         return next;
       },
       { replace: true },
     );
-  return { values, set, params };
+  const set = (key: string, value: string | null) => setMany({ [key]: value });
+  return { values, set, setMany, params };
 };
 
 export function FilterBar({ children }: { children: ReactNode }) {

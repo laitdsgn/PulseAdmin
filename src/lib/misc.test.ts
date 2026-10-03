@@ -21,6 +21,9 @@ test("roles match the backend guards", () => {
   expect(canAccess("moderator", "users")).toBe(false);
   expect(canAccess("moderator", "audit")).toBe(false);
   expect(canAccess("moderator", "places")).toBe(true);
+  expect(canAccess("moderator", "map")).toBe(true);
+  expect(canAccess("admin", "map")).toBe(true);
+  expect(canAccess("city", "map")).toBe(false);
   expect(canAccess("city", "city")).toBe(true);
   expect(canAccess("city", "reports")).toBe(false);
   expect(canAccess("city", "dashboard")).toBe(false);

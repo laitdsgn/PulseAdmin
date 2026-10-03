@@ -42,6 +42,7 @@ export const en: Record<MessageKey, string> = {
   "common.chars": "{count}/{max} characters",
 
   "nav.dashboard": "Dashboard",
+  "nav.map": "Map",
   "nav.city": "City statistics",
   "nav.moderation": "Moderation",
   "nav.reports": "Reports",
@@ -126,6 +127,15 @@ export const en: Record<MessageKey, string> = {
   "city.export": "Export CSV",
   "city.exporting": "Preparing the file…",
   "city.months": "Months",
+
+  "map.title": "Report map",
+  "map.kind": "Kind",
+  "map.showPlaces": "Places",
+  "map.count": "reports: {reports} · places: {places}",
+  "map.truncated": "Showing the first {max} points – zoom in to see all of them.",
+  "map.legend": "Reports",
+  "map.placesLegend": "Places (wheelchair access)",
+  "map.hiddenNote": "Hidden reports are not shown on the map – find them under Reports.",
 
   "moderation.title": "Moderation queue",
   "moderation.open": "Open",
