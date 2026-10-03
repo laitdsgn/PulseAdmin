@@ -26,6 +26,7 @@ import { applyFieldErrors, toastError } from "@/lib/errors";
 import { formatDateTime, formatNumber, formatPercent, osmLink } from "@/lib/format";
 import { useInfiniteList, useInvalidate } from "@/lib/queries";
 import type { AdminComment, AdminReport, Page } from "@/lib/types";
+import { ReportQuestions } from "./questions";
 
 /** Loads one report (hidden ones too) through the admin list's exact-id search. */
 export const useAdminReport = (id: string | null) =>
@@ -94,6 +95,12 @@ function ReportDetails({ report: r }: { report: AdminReport }) {
       t("reports.source"),
       `${t(`source.${r.source}`)}${r.aiConfidence !== null ? ` · ${t("reports.aiConfidence")} ${formatPercent(r.aiConfidence, lang)}` : ""}`,
     ],
+    ...(r.line !== null || r.delayMinutes !== null
+      ? ([
+          [t("reports.line"), r.line ?? "—"],
+          [t("reports.delay"), r.delayMinutes !== null ? t("reports.delayMinutes", { count: r.delayMinutes }) : "—"],
+        ] as [string, React.ReactNode][])
+      : []),
     [t("common.createdAt"), formatDateTime(r.createdAt, lang)],
     [t("common.updatedAt"), formatDateTime(r.updatedAt, lang)],
     [t("reports.lastConfirmed"), formatDateTime(r.lastConfirmedAt, lang)],
@@ -150,6 +157,12 @@ function ReportDetails({ report: r }: { report: AdminReport }) {
           className="max-h-72 w-full rounded-md border"
         />
 
+        {r.source === "detection" && r.status === "unverified" && (
+          <p className="rounded-md border border-violet-300 bg-violet-50 p-3 text-sm text-violet-900 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-200">
+            {t("reports.detectionInfo")}
+          </p>
+        )}
+
         {r.description && <p className="text-sm whitespace-pre-wrap">{r.description}</p>}
 
         <MapPreview points={[{ lat: r.lat, lng: r.lng, label: r.title }]} />
@@ -162,6 +175,13 @@ function ReportDetails({ report: r }: { report: AdminReport }) {
             </div>
           ))}
         </dl>
+
+        {r.source === "detection" && (
+          <section className="space-y-3 border-t pt-4">
+            <h3 className="font-medium">{t("reports.questions")}</h3>
+            <ReportQuestions reportId={r.id} />
+          </section>
+        )}
 
         <section className="space-y-3 border-t pt-4">
           <h3 className="font-medium">{t("reports.editTitle")}</h3>

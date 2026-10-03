@@ -9,7 +9,11 @@ export const AREAS = [
   "moderation",
   "reports",
   "comments",
+  "questions",
   "places",
+  "pois",
+  "transit",
+  "detection",
   "users",
   "audit",
   "account",
@@ -18,7 +22,20 @@ export type Area = (typeof AREAS)[number];
 
 const ACCESS: Record<Role, readonly Area[]> = {
   admin: AREAS,
-  moderator: ["dashboard", "map", "city", "moderation", "reports", "comments", "places", "account"],
+  moderator: [
+    "dashboard",
+    "map",
+    "city",
+    "moderation",
+    "reports",
+    "comments",
+    "questions",
+    "places",
+    "pois",
+    "transit",
+    "detection",
+    "account",
+  ],
   city: ["city", "account"],
   user: [],
 };

@@ -1,5 +1,15 @@
 import { useMutation, useQueryClient, type InfiniteData } from "@tanstack/react-query";
-import { Check, Eye, EyeOff, Flag, MessageSquare, ClipboardList } from "lucide-react";
+import {
+  Check,
+  ClipboardList,
+  Eye,
+  EyeOff,
+  Flag,
+  HelpCircle,
+  MessageSquare,
+  MessageSquareReply,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -17,7 +27,7 @@ import { FLAG_REASONS } from "@/lib/enums";
 import { toastError } from "@/lib/errors";
 import { formatDateTime, shortId } from "@/lib/format";
 import { useInfiniteList, useInvalidate } from "@/lib/queries";
-import type { FlagAction, FlagGroup, Page } from "@/lib/types";
+import type { FlagAction, FlagGroup, FlagTarget, Page } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAdminReport } from "./ReportSheet";
 
@@ -170,12 +180,8 @@ export function ModerationPage() {
                   >
                     <div className="flex items-center justify-between gap-2 text-sm">
                       <span className="flex items-center gap-1.5 font-medium">
-                        {g.targetType === "report" ? (
-                          <ClipboardList className="size-4" />
-                        ) : (
-                          <MessageSquare className="size-4" />
-                        )}
-                        {t(g.targetType === "report" ? "moderation.report" : "moderation.comment")}
+                        <TargetIcon type={g.targetType} />
+                        {t(`moderation.${g.targetType}`)}
                       </span>
                       <Badge variant="destructive" className="gap-1">
                         <Flag className="size-3" />
@@ -216,9 +222,35 @@ export function ModerationPage() {
   );
 }
 
+const TARGET_ICONS: Record<FlagTarget, LucideIcon> = {
+  report: ClipboardList,
+  comment: MessageSquare,
+  question: HelpCircle,
+  answer: MessageSquareReply,
+};
+
+function TargetIcon({ type }: { type: FlagTarget }) {
+  const Icon = TARGET_ICONS[type];
+  return <Icon className="size-4" />;
+}
+
+type Preview = NonNullable<FlagGroup["preview"]>;
+type ReportPreview = Extract<Preview, { title: string }>;
+type CommentPreview = Extract<Preview, { body: string }>;
+type QuestionPreview = Extract<Preview, { lat: number }>;
+type AnswerPreview = Extract<Preview, { questionId: number }>;
+
+const isReportPreview = (p: Preview): p is ReportPreview => "title" in p;
+const isCommentPreview = (p: Preview): p is CommentPreview => "body" in p;
+const isQuestionPreview = (p: Preview): p is QuestionPreview => "lat" in p;
+const isAnswerPreview = (p: Preview): p is AnswerPreview => "questionId" in p;
+
 const previewText = (g: FlagGroup) => {
-  if (!g.preview) return null;
-  return "body" in g.preview ? g.preview.body : g.preview.title;
+  const p = g.preview;
+  if (!p) return null;
+  if (isReportPreview(p)) return p.title;
+  if (isCommentPreview(p)) return p.body;
+  return p.text;
 };
 
 function FlagDetail({
@@ -234,13 +266,15 @@ function FlagDetail({
 }) {
   const { t, lang } = useI18n();
   const p = group.preview;
-  const reportId = group.targetType === "report" ? group.targetId : p && "reportId" in p ? p.reportId : null;
+  const reportId = group.targetType === "report" ? group.targetId : p && isCommentPreview(p) ? p.reportId : null;
+  const questionId =
+    group.targetType === "question" ? Number(group.targetId) : p && isAnswerPreview(p) ? p.questionId : null;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2 text-base">
-          {t(group.targetType === "report" ? "moderation.report" : "moderation.comment")}
+          {t(`moderation.${group.targetType}`)}
           <span className="font-mono text-xs text-muted-foreground">{shortId(group.targetId)}</span>
           {group.hidden && <Badge variant="destructive">{t("moderation.currentlyHidden")}</Badge>}
         </CardTitle>
@@ -248,10 +282,23 @@ function FlagDetail({
       <CardContent className="space-y-4">
         {!p ? (
           <p className="text-sm text-muted-foreground">{t("moderation.noPreview")}</p>
-        ) : "body" in p ? (
+        ) : isCommentPreview(p) ? (
           <blockquote className="rounded-md border-l-4 bg-muted/50 p-3 text-sm whitespace-pre-wrap">
             {p.body}
           </blockquote>
+        ) : isQuestionPreview(p) ? (
+          <blockquote className="rounded-md border-l-4 bg-muted/50 p-3 text-sm whitespace-pre-wrap">
+            {p.text}
+          </blockquote>
+        ) : isAnswerPreview(p) ? (
+          <div className="space-y-2">
+            {p.answer && <Badge variant="outline">{t(`answer.${p.answer}`)}</Badge>}
+            {p.text && (
+              <blockquote className="rounded-md border-l-4 bg-muted/50 p-3 text-sm whitespace-pre-wrap">
+                {p.text}
+              </blockquote>
+            )}
+          </div>
         ) : (
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -285,6 +332,11 @@ function FlagDetail({
         {reportId && (
           <Button asChild variant="link" className="h-auto p-0">
             <Link to={`/reports?id=${reportId}`}>{t("moderation.openReport")} →</Link>
+          </Button>
+        )}
+        {questionId !== null && (
+          <Button asChild variant="link" className="h-auto p-0">
+            <Link to={`/questions?id=${questionId}`}>{t("moderation.openQuestion")} →</Link>
           </Button>
         )}
 

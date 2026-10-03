@@ -7,13 +7,13 @@ import { PageHeader } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n";
-import { CATEGORIES_BY_KIND, REPORT_KINDS, REPORT_STATUSES, VISIBILITIES } from "@/lib/enums";
+import { CATEGORIES_BY_KIND, REPORT_KINDS, REPORT_SOURCES, REPORT_STATUSES, VISIBILITIES } from "@/lib/enums";
 import { formatDateTime } from "@/lib/format";
 import { useInfiniteList } from "@/lib/queries";
 import type { AdminReport } from "@/lib/types";
 import { ReportSheet } from "./ReportSheet";
 
-const FILTERS = ["q", "status", "category", "city", "authorId", "visibility", "hasPhoto", "id"] as const;
+const FILTERS = ["q", "status", "source", "category", "city", "authorId", "visibility", "hasPhoto", "id"] as const;
 
 export function ReportsPage() {
   const { t, lang } = useI18n();
@@ -42,7 +42,12 @@ export function ReportsPage() {
       cell: (r) => (
         <div className="flex max-w-80 flex-col gap-1">
           <span className="truncate font-medium">{r.title}</span>
-          <span className="truncate text-xs text-muted-foreground">{r.address ?? r.description ?? "—"}</span>
+          <span className="truncate text-xs text-muted-foreground">
+            {r.line
+              ? `${t("reports.line")} ${r.line}${r.delayMinutes !== null ? ` · +${r.delayMinutes} min` : ""} · `
+              : ""}
+            {r.address ?? r.description ?? "—"}
+          </span>
         </div>
       ),
     },
@@ -92,6 +97,14 @@ export function ReportsPage() {
           options={REPORT_STATUSES.map((s) => ({ value: s, label: t(`status.${s}`) }))}
           allLabel={t("common.all")}
           className="w-40"
+        />
+        <FilterSelect
+          label={t("reports.source")}
+          value={values.source}
+          onChange={(v) => set("source", v)}
+          options={REPORT_SOURCES.map((s) => ({ value: s, label: t(`source.${s}`) }))}
+          allLabel={t("common.all")}
+          className="w-44"
         />
         <FilterSelect
           label={t("reports.category")}

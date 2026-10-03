@@ -15,12 +15,16 @@ import { AuditPage } from "@/routes/audit";
 import { CityPage } from "@/routes/city";
 import { CommentsPage } from "@/routes/comments";
 import { DashboardPage } from "@/routes/dashboard";
+import { DetectionPage } from "@/routes/detection";
 import { NotFoundPage } from "@/routes/errors";
 import { LoginPage } from "@/routes/login";
 import { MapPage } from "@/routes/map";
 import { ModerationPage } from "@/routes/moderation";
 import { PlacesPage } from "@/routes/places";
+import { PoisPage } from "@/routes/pois";
+import { QuestionsPage } from "@/routes/questions";
 import { ReportsPage } from "@/routes/reports";
+import { TransitPage } from "@/routes/transit";
 import { UsersPage } from "@/routes/users";
 import "./index.css";
 
@@ -93,6 +97,38 @@ const router = createBrowserRouter([
         element: (
           <RoleGuard area="places">
             <PlacesPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "questions",
+        element: (
+          <RoleGuard area="questions">
+            <QuestionsPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "pois",
+        element: (
+          <RoleGuard area="pois">
+            <PoisPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "transit",
+        element: (
+          <RoleGuard area="transit">
+            <TransitPage />
+          </RoleGuard>
+        ),
+      },
+      {
+        path: "detection",
+        element: (
+          <RoleGuard area="detection">
+            <DetectionPage />
           </RoleGuard>
         ),
       },

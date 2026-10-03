@@ -23,6 +23,12 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
 
 export function StatusBadge({ status }: { status: ReportStatus }) {
   const t = useT();
+  if (status === "unverified")
+    return (
+      <Badge className="border-transparent bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200">
+        {t("status.unverified")}
+      </Badge>
+    );
   return <Badge variant={status === "active" ? "default" : "outline"}>{t(`status.${status}`)}</Badge>;
 }
 

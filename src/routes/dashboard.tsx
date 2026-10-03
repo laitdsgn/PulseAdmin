@@ -1,5 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { Bot, ClipboardList, Flag, MessageSquare, Users } from "lucide-react";
+import {
+  Bot,
+  ClipboardList,
+  Flag,
+  HelpCircle,
+  MapPinned,
+  MessageSquare,
+  Radar,
+  ShoppingBasket,
+  TramFront,
+  Users,
+} from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Link } from "react-router";
 import { CityPicker, useUrlFilters } from "@/components/Filters";
@@ -46,6 +57,7 @@ export function DashboardPage() {
               icon={ClipboardList}
               value={n(d.reports.active)}
               sub={t("dashboard.reportsSub", {
+                unverified: n(d.reports.unverified),
                 total: n(d.reports.total),
                 resolved: n(d.reports.resolved),
                 hidden: n(d.reports.hidden),
@@ -131,10 +143,72 @@ export function DashboardPage() {
             </Card>
           </div>
 
+          <CommunityTiles d={d} />
+
           <LatestPhotos city={values.city} />
         </div>
       )}
     </>
+  );
+}
+
+const tileLink = (to: string, label: string) => (
+  <Link to={to} className="text-xs font-medium text-primary underline-offset-4 hover:underline">
+    {label} →
+  </Link>
+);
+
+/** Questions, presence, detection, transport and errand places (the features added for the app). */
+function CommunityTiles({ d }: { d: Dashboard }) {
+  const { t, lang } = useI18n();
+  const n = (v: number) => formatNumber(v, lang);
+  const c = d.community;
+  return (
+    <section className="space-y-2">
+      <h2 className="text-sm font-medium text-muted-foreground">{t("dashboard.community")}</h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <StatTile
+          label={t("dashboard.questionsOpen")}
+          icon={HelpCircle}
+          value={n(c.questions.open)}
+          sub={t("dashboard.questionsSub", {
+            new: n(c.questions.last24h),
+            answers: n(c.questions.answersLast24h),
+            hidden: n(c.questions.hidden),
+          })}
+          footer={tileLink("/questions?status=open", t("nav.questions"))}
+        />
+        <StatTile
+          label={t("dashboard.presence")}
+          icon={MapPinned}
+          value={n(c.presenceNow)}
+          sub={t("dashboard.presenceSub")}
+        />
+        <StatTile
+          label={t("dashboard.detection")}
+          icon={Radar}
+          value={n(c.detection.unverified)}
+          sub={t("dashboard.detectionSub", {
+            signals: n(c.detection.signalsLast24h),
+            confirmed: n(c.detection.confirmedLast7Days),
+          })}
+          footer={tileLink("/detection", t("nav.detection"))}
+        />
+        <StatTile
+          label={t("dashboard.transit")}
+          icon={TramFront}
+          value={n(c.transit.stops)}
+          sub={t("dashboard.transitSub", { feeds: n(c.transit.feeds), stops: n(c.transit.stops) })}
+          footer={tileLink("/transit", t("nav.transit"))}
+        />
+        <StatTile
+          label={t("dashboard.pois")}
+          icon={ShoppingBasket}
+          value={n(c.pois)}
+          footer={tileLink("/pois", t("nav.pois"))}
+        />
+      </div>
+    </section>
   );
 }
 

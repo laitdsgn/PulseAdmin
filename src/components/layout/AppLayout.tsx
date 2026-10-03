@@ -15,6 +15,10 @@ import {
   UserRound,
   Users,
   type LucideIcon,
+  HelpCircle,
+  Radar,
+  ShoppingBasket,
+  TramFront,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useMatch } from "react-router";
@@ -43,7 +47,11 @@ const NAV: { area: Area; to: string; label: MessageKey; icon: LucideIcon }[] = [
   { area: "moderation", to: "/moderation", label: "nav.moderation", icon: Flag },
   { area: "reports", to: "/reports", label: "nav.reports", icon: ClipboardList },
   { area: "comments", to: "/comments", label: "nav.comments", icon: MessageSquare },
+  { area: "questions", to: "/questions", label: "nav.questions", icon: HelpCircle },
   { area: "places", to: "/places", label: "nav.places", icon: MapPin },
+  { area: "pois", to: "/pois", label: "nav.pois", icon: ShoppingBasket },
+  { area: "transit", to: "/transit", label: "nav.transit", icon: TramFront },
+  { area: "detection", to: "/detection", label: "nav.detection", icon: Radar },
   { area: "city", to: "/city", label: "nav.city", icon: Building2 },
   { area: "users", to: "/users", label: "nav.users", icon: Users },
   { area: "audit", to: "/audit", label: "nav.audit", icon: ScrollText },

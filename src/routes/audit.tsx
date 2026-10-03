@@ -19,6 +19,12 @@ const targetLink = (e: AuditEntry) => {
       return `/places?id=${e.targetId}`;
     case "comment":
       return `/comments`;
+    case "question":
+      return `/questions?id=${e.targetId}`;
+    case "answer":
+      return `/questions`;
+    case "poi":
+      return `/pois?id=${e.targetId}`;
   }
 };
 
