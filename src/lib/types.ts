@@ -223,6 +223,13 @@ export type TransitFeed = {
     trips: number | null;
     lastError: { at: string; message: string } | null;
   };
+  vehiclePositionsUrl: string | null;
+  vehicles: {
+    fetchedAt: string | null;
+    feedTimestamp: string | null;
+    vehicles: number | null;
+    lastError: { at: string; message: string } | null;
+  };
 };
 
 export type SignalSpot = {

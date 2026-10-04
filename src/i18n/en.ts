@@ -461,10 +461,14 @@ export const en: Record<MessageKey, string> = {
   "transit.realtimeUnknown": "Not fetched yet (since the server started)",
   "transit.realtimeOk": "{trips} trips · data from {at}",
   "transit.realtimeError": "Error: {message} ({at})",
+  "transit.vehicles": "Vehicle positions",
+  "transit.vehiclesNone": "No VehiclePositions URL",
+  "transit.vehiclesOk": "{vehicles} vehicles · data from {at}",
+  "transit.vehiclesStale": "Vehicle positions have not changed for over 10 minutes (normal at night, with no runs).",
   "transit.check": "Check now",
   "transit.checked": "Realtime data checked",
   "transit.hint":
-    "Timetables are imported by the server (bun run transit:import, ideally daily). Realtime data is fetched when the app asks and kept for 30 s.",
+    "Timetables are imported by the server (bun run transit:import, ideally daily). Realtime data is fetched when the app asks and kept for 30 s (vehicle positions 10 s).",
   "detection.title": "Passive detection",
   "detection.hint":
     "Anonymous “turned back here” signals. 3 different devices within 25 m and 2 h create a report to verify and a question to people nearby.",

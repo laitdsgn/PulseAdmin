@@ -460,10 +460,14 @@ export const pl = {
   "transit.realtimeUnknown": "Jeszcze nie pobierano (od startu serwera)",
   "transit.realtimeOk": "{trips} kursów · dane z {at}",
   "transit.realtimeError": "Błąd: {message} ({at})",
+  "transit.vehicles": "Pozycje pojazdów",
+  "transit.vehiclesNone": "Brak adresu VehiclePositions",
+  "transit.vehiclesOk": "{vehicles} pojazdów · dane z {at}",
+  "transit.vehiclesStale": "Pozycje pojazdów nie zmieniły się od ponad 10 minut (w nocy, bez kursów, to normalne).",
   "transit.check": "Sprawdź teraz",
   "transit.checked": "Sprawdzono dane na żywo",
   "transit.hint":
-    "Rozkłady importuje serwer (bun run transit:import, najlepiej codziennie). Dane na żywo są pobierane przy zapytaniach aplikacji i trzymane 30 s.",
+    "Rozkłady importuje serwer (bun run transit:import, najlepiej codziennie). Dane na żywo są pobierane przy zapytaniach aplikacji i trzymane 30 s (pozycje pojazdów 10 s).",
   "detection.title": "Wykrywanie pasywne",
   "detection.hint":
     "Anonimowe sygnały „zawrócił tutaj”. 3 różne urządzenia w promieniu 25 m w ciągu 2 h tworzą zgłoszenie do weryfikacji i pytanie do osób w pobliżu.",

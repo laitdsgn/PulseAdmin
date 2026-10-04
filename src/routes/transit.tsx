@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, Info, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { CityPicker, useCityName, useUrlFilters } from "@/components/Filters";
 import { EmptyState, ErrorState, LoadingRows, PageHeader } from "@/components/states";
@@ -14,11 +14,22 @@ import { useInvalidate } from "@/lib/queries";
 import type { TransitFeed } from "@/lib/types";
 
 const DAY_MS = 86_400_000;
+const MIN_MS = 60_000;
 const today = () => new Date().toISOString().slice(0, 10);
 
-/** Problems worth a warning: a timetable that no longer covers today, ends soon, or an old import. */
+type FeedWarning = {
+  key: "transit.servesStale" | "transit.servesEnding" | "transit.importOld" | "transit.vehiclesStale";
+  days?: number;
+  /** Worth knowing, not a problem (e.g. no vehicle moves at night). */
+  info?: boolean;
+};
+
+/**
+ * Problems worth a warning: a timetable that no longer covers today, ends soon, or an old import;
+ * and, as information, vehicle positions fetched recently that have not changed for 10 minutes.
+ */
 export const feedWarnings = (f: TransitFeed, now = Date.now()) => {
-  const out: { key: "transit.servesStale" | "transit.servesEnding" | "transit.importOld"; days?: number }[] = [];
+  const out: FeedWarning[] = [];
   const day = today();
   if (!f.servesTo || !f.servesFrom || f.servesTo < day || f.servesFrom > day) out.push({ key: "transit.servesStale" });
   else {
@@ -26,6 +37,10 @@ export const feedWarnings = (f: TransitFeed, now = Date.now()) => {
     if (days <= 3) out.push({ key: "transit.servesEnding", days });
   }
   if (now - Date.parse(f.importedAt) > 2 * DAY_MS) out.push({ key: "transit.importOld" });
+  const v = f.vehicles;
+  if (v?.fetchedAt && v.feedTimestamp && now - Date.parse(v.fetchedAt) < 5 * MIN_MS && now - Date.parse(v.feedTimestamp) > 10 * MIN_MS) {
+    out.push({ key: "transit.vehiclesStale", info: true });
+  }
   return out;
 };
 
@@ -76,7 +91,6 @@ function FeedCard({ feed: f }: { feed: TransitFeed }) {
     },
     onError: (err) => toastError(err, t),
   });
-  const rt = f.realtime;
   const warnings = feedWarnings(f);
 
   const rows: [string, React.ReactNode][] = [
@@ -88,27 +102,21 @@ function FeedCard({ feed: f }: { feed: TransitFeed }) {
     [t("transit.serves"), f.servesFrom ? `${formatDate(f.servesFrom, lang)} – ${formatDate(f.servesTo, lang)}` : "—"],
     [
       t("transit.realtime"),
-      !f.realtimeUrl ? (
-        <span className="text-muted-foreground">{t("transit.realtimeNone")}</span>
-      ) : (
-        <div className="space-y-1">
-          {rt.fetchedAt ? (
-            <span>
-              {t("transit.realtimeOk", {
-                trips: formatNumber(rt.trips, lang),
-                at: formatDateTime(rt.feedTimestamp ?? rt.fetchedAt, lang),
-              })}
-            </span>
-          ) : (
-            !rt.lastError && <span className="text-muted-foreground">{t("transit.realtimeUnknown")}</span>
-          )}
-          {rt.lastError && (
-            <p className="text-destructive">
-              {t("transit.realtimeError", { message: rt.lastError.message, at: formatDateTime(rt.lastError.at, lang) })}
-            </p>
-          )}
-        </div>
-      ),
+      <LiveStatus
+        url={f.realtimeUrl}
+        status={f.realtime}
+        none={t("transit.realtimeNone")}
+        ok={(at) => t("transit.realtimeOk", { trips: formatNumber(f.realtime.trips ?? 0, lang), at })}
+      />,
+    ],
+    [
+      t("transit.vehicles"),
+      <LiveStatus
+        url={f.vehiclePositionsUrl}
+        status={f.vehicles}
+        none={t("transit.vehiclesNone")}
+        ok={(at) => t("transit.vehiclesOk", { vehicles: formatNumber(f.vehicles.vehicles ?? 0, lang), at })}
+      />,
     ],
   ];
 
@@ -119,7 +127,7 @@ function FeedCard({ feed: f }: { feed: TransitFeed }) {
           <CardTitle className="text-base">{f.name}</CardTitle>
           <p className="font-mono text-xs text-muted-foreground">{f.id}</p>
         </div>
-        {f.realtimeUrl && (
+        {(f.realtimeUrl || f.vehiclePositionsUrl) && (
           <Button size="sm" variant="outline" disabled={check.isPending} onClick={() => check.mutate()}>
             <RefreshCw className={check.isPending ? "size-4 animate-spin" : "size-4"} />
             {t("transit.check")}
@@ -128,8 +136,13 @@ function FeedCard({ feed: f }: { feed: TransitFeed }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {warnings.map((w) => (
-          <p key={w.key} className="flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <p
+            key={w.key}
+            className={
+              w.info ? "flex items-start gap-1.5 text-sm text-muted-foreground" : "flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400"
+            }
+          >
+            {w.info ? <Info className="mt-0.5 size-4 shrink-0" /> : <AlertTriangle className="mt-0.5 size-4 shrink-0" />}
             {t(w.key, { days: w.days ?? 0 })}
           </p>
         ))}
@@ -141,12 +154,42 @@ function FeedCard({ feed: f }: { feed: TransitFeed }) {
             </div>
           ))}
         </dl>
-        {warnings.length === 0 && (
+        {warnings.every((w) => w.info) && (
           <Badge variant="outline" className="border-emerald-600 text-emerald-700 dark:text-emerald-400">
             OK
           </Badge>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** One GTFS-Realtime feed: what was last fetched, or the last error, or that there is no such feed. */
+function LiveStatus({
+  url,
+  status,
+  none,
+  ok,
+}: {
+  url: string | null;
+  status: { fetchedAt: string | null; feedTimestamp: string | null; lastError: { at: string; message: string } | null };
+  none: string;
+  ok: (at: string) => string;
+}) {
+  const { t, lang } = useI18n();
+  if (!url) return <span className="text-muted-foreground">{none}</span>;
+  return (
+    <div className="space-y-1">
+      {status.fetchedAt ? (
+        <span>{ok(formatDateTime(status.feedTimestamp ?? status.fetchedAt, lang))}</span>
+      ) : (
+        !status.lastError && <span className="text-muted-foreground">{t("transit.realtimeUnknown")}</span>
+      )}
+      {status.lastError && (
+        <p className="text-destructive">
+          {t("transit.realtimeError", { message: status.lastError.message, at: formatDateTime(status.lastError.at, lang) })}
+        </p>
+      )}
+    </div>
   );
 }
